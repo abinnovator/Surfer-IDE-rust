@@ -24,7 +24,7 @@ Lang packs are extensions that change how your editor behaves based on your fram
 ### Themes
 
 Themes let you make the editor look the way you want. A few curated themes are available now — custom theme creation is coming soon.
-![alt text](![](image.png))
+![alt text](image.png)
 
 ### Inbuilt Hackatime
 Inbuilt hackatime allows you to track your time directly in the editor without any extra extensions so all you need is a hackatime api key
