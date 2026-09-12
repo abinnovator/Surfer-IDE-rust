@@ -1,0 +1,18 @@
+{
+  "activeTheme": "modern",
+  "videoActive": true,
+  "themes": [
+    {
+      "id": "modern",
+      "name": "Modern",
+      "description": "Sleek and minimalistic design like vscode",
+      "preview": "#0f0b08"
+    },
+    {
+      "id": "cosy-classic",
+      "name": "Cosy Classic",
+      "description": "Classic cosy theme with warm tones",
+      "preview": "#0f0b08"
+    }
+  ]
+}
