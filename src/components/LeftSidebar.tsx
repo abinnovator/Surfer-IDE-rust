@@ -1,6 +1,8 @@
 import { useStore } from "../lib/zustand";
 import { Files, GitGraph, List, Package, Search } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
+import FileTreeItem from "./FileTreeItem";
+import { readFile } from "../lib/actions/FileActions";
 
 interface SidebarColors {
   iconColor: string
@@ -15,6 +17,7 @@ interface SidebarColors {
   tabPaddingY?: string
   tabBorderRadius?: string
 }
+
 
 const LeftSidebar = () => {
   const fileExplorerOpen = useStore.fileExplorerOpen((state) => state.fileExplorerOpen)
@@ -54,6 +57,16 @@ const LeftSidebar = () => {
     tabPaddingY:    ls?.['tab-padding-y'],
     tabBorderRadius: ls?.['tab-border-radius'],
   }
+  const openTabs = useStore.openTabs((state) => state.openTabs)
+
+  const handleOpenFile = async (entry: any) => {
+      const currentTabs = useStore.openTabs.getState().openTabs
+      if (!currentTabs.find(t => t.path === entry.path)) {
+        const content = await readFile(entry.path)
+        useStore.openTabs.getState().setOpenTabs([...currentTabs, { path: entry.path, name: entry.name, content }])
+      }
+      useStore.activeTabPath.getState().setActiveTabPath(entry.path)
+    }
   const togglePanel = useCallback(({ panel }: { panel: 'file-explorer' | 'search' | 'git' | 'task-list' | 'langPackPanel' }) => {
       const fe = useStore.fileExplorerOpen.getState()
       const sm = useStore.searchMenuOpen.getState()
@@ -78,6 +91,7 @@ const LeftSidebar = () => {
     const panelBorderStyle = { borderColor: sc.border }
   const inputStyle = { background: sc.iconHoverBg, color: sc.iconActiveColor }
   console.log(files)
+  const sortedFiles = files.sort((a, b) => Number(b.isDir) - Number(a.isDir));
   return (
     <div className="flex flex-row shrink-0 overflow-hidden">
       <div
@@ -117,11 +131,9 @@ const LeftSidebar = () => {
               {folderName || 'No folder opened'}
             </h1>
           </div>
-          <div>
-            {files.map((file) => (
-              <div key={file}>
-                <p>{file}</p>
-              </div>
+          <div className="pt-4 overflow-x-hidden overflow-y-scroll *:thin-scroll">
+            {sortedFiles.map((file) => (
+              <FileTreeItem key={file.path} entry={file} onClick={() => handleOpenFile(file)} />
             ))}
           </div>
         </div>
