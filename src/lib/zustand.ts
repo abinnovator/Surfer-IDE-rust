@@ -33,13 +33,7 @@ export interface Theme { id?: string; name?: string; description?: string; previ
 export interface Tab { path: string; name: string; content: string }
 export interface TerminalTab { id: string; label: string }
 export interface Pack { id: string; name: string; description?: string }
-export interface FileEntry {
-  name: string
-  path: string
-  isDirectory: boolean
-  isOpen?: boolean
-  children?: FileEntry[]
-}
+interface FileNode { name: string; path: string; isDir: boolean }
 
 const fileMenuOpen = create<{ fileMenuOpen: boolean; setFileMenuOpen: (open: boolean) => void }>((set) => ({
     fileMenuOpen: false,
@@ -140,7 +134,7 @@ const actionMenu = create <{ actionMenuOpen: boolean; setActionMenuOpen: (open: 
     actionMenuOpen: false,
     setActionMenuOpen: (open) => set({ actionMenuOpen: open })
 }))
-const files = create<{ files: string[]; setFiles: (files: string[]) => void }>((set) => ({
+const files = create<{ files: FileNode[]; setFiles: (files: FileNode[]) => void }>((set) => ({
     files: [],
     setFiles: (files) => set({ files })
 }))

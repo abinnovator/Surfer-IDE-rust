@@ -165,3 +165,40 @@
     @apply font-sans;
   }
 }
+
+/*Custom scrollbar stuff*/
+
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: #9A8A78 transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #9A8A78;
+  border-radius: 10px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #837464;
+}
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9A8A78 transparent;
+}
+.thin-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background-color: #9A8A78; border-radius: 10px; }

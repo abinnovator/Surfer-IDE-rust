@@ -4,6 +4,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open } from '@tauri-apps/plugin-dialog';
 import { readAllFilesInFolder } from '../lib/actions/FileActions'
+interface FileNode { name: string; path: string; isDir: boolean }
 
 
 const Titlebar = () => {
@@ -15,7 +16,8 @@ const Titlebar = () => {
 
     const appWindow = getCurrentWindow()
 
-    const folderPath = useStore.folderPath((state) => state.folderPath)
+  const folderPath = useStore.folderPath((state) => state.folderPath)
+  const setFolderPath = useStore.folderPath((state) => state.setFolderPath)
     const indexing = useStore.isIndexing((state) => state.isIndexing)
     const indexLog = useStore.indexLog((state) => state.indexLog)
     const minimized = useStore.minimized((state) => state.minimized)
@@ -85,8 +87,7 @@ const Titlebar = () => {
         fe.setFileExplorerOpen(true); sm.setSearchMenuOpen(false); gm.setGitMenuOpen(false); tl.setTaskListOpen(false); lp.setLangPackOpen(false);
         setFileMenuOpen(false)
         setRecentFolders([...recentFolders, folder])
-
-        const filesInFolder = await readAllFilesInFolder(folder) as [];
+        const filesInFolder = await readAllFilesInFolder(folder) as FileNode[];
         console.log(filesInFolder)
         setFiles(filesInFolder)
       }

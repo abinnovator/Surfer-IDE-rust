@@ -131,7 +131,7 @@ const LeftSidebar = () => {
               {folderName || 'No folder opened'}
             </h1>
           </div>
-          <div className="pt-4 overflow-x-hidden overflow-y-scroll *:thin-scroll">
+          <div className="pt-4 overflow-x-hidden overflow-y-auto flex-1 min-h-0 thin-scroll">
             {sortedFiles.map((file) => (
               <FileTreeItem key={file.path} entry={file} onClick={() => handleOpenFile(file)} />
             ))}

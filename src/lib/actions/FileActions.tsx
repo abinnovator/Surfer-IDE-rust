@@ -5,3 +5,12 @@ export const readAllFilesInFolder = async (path: string) => {
   console.log(files)
   return files
 }
+
+export const readFile = async (path: string) => {
+  const content = await invoke("read_file", { path })
+  return content
+}
+
+export const saveFile = async (path: string, content: string) => {
+  await invoke("save_file", { path, content })
+}
