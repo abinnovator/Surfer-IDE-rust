@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import { convertFileSrc } from '@tauri-apps/api/core'
@@ -10,6 +10,7 @@ import { useStore } from "./lib/zustand";
 import Editor from "./components/Editor";
 import { X } from "lucide-react";
 import RightSidebar from "./components/RightSidebar";
+import StatusBar from "./components/Statusbar";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -18,6 +19,17 @@ function App() {
   const activeTabPath = useStore.activeTabPath((state) => state.activeTabPath);
   const unsavedFiles = useStore.unsavedFiles((state) => state.unsavedFiles);
   const folderPath = useStore.folderPath((state) => state.folderPath);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoPlaying = useStore.video((state) => state.video);
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (videoPlaying) {
+      el.play().catch(() => {});
+    } else {
+      el.pause();
+    }
+  }, [videoPlaying]);
   const handleCloseTab = (path: string, e: React.MouseEvent) => {
       e.stopPropagation();
       const current = useStore.openTabs.getState().openTabs;
@@ -47,7 +59,7 @@ function App() {
     ];
   const quote = quotes[Math.floor(Math.random() * quotes.length)];
   const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg'];
-
+  const videoHidden = useStore.videoEnabled((state) => state.videoEnabled);
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#1e1e1e]">
       <video
@@ -56,9 +68,13 @@ function App() {
       muted
       className="absolute inset-0 w-full h-full object-cover pointer-events-none"
       style={{ opacity: 0.15, zIndex: 0 }}
-      autoPlay
+      hidden={videoHidden}
+       ref={videoRef}
+      onLoadedData={() => {
+                  if (videoPlaying) videoRef.current?.play().catch(() => {});
+                }}
       />
-      <div className="h-screen w-screen overflow-hidden flex flex-col">
+      <div className="h-full w-full overflow-hidden flex flex-col">
         <Titlebar />
         <div className="flex flex-row flex-1 overflow-hidden">
           <LeftSidebar />
@@ -148,10 +164,15 @@ function App() {
             </div>
         </div>
         </div>
-        <div className="relative">
-          <div className="absolute top-10 right-0 max-h-">
+        {/*Right Sidebar*/}
+        <div className="">
+          <div className="absolute top-10 right-0 bottom-10">
             <RightSidebar />
           </div>
+        </div>
+        {/*Status Bar*/}
+        <div className="shrink-0">
+          <StatusBar />
         </div>
 
 
