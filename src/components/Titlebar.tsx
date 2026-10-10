@@ -4,6 +4,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open } from '@tauri-apps/plugin-dialog';
 import { readAllFilesInFolder } from '../lib/actions/FileActions'
+import { indexProject } from '../lib/actions/AiActions';
 interface FileNode { name: string; path: string; isDir: boolean }
 
 
@@ -220,8 +221,8 @@ const Titlebar = () => {
                   <Settings size={20} />
                 </button>
                 <button
-                  // onClick={indexProject}
-                  disabled={indexing || !folderPath}
+                  onClick={()=>indexProject(folderPath)}
+                  disabled={indexing || !useStore.folderName.getState().folderName}
                   title="Index Project"
                   className={`${btnClass} disabled:opacity-40`}
                   style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}

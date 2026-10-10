@@ -21,6 +21,8 @@ function App() {
   const folderPath = useStore.folderPath((state) => state.folderPath);
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoPlaying = useStore.video((state) => state.video);
+  const AIChatOpen = useStore.aiChatOpen((state) => state.aiChatOpen)
+  const setAIChatOpen = useStore.aiChatOpen((state)=> state.setOpen)
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -51,6 +53,24 @@ function App() {
     // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     setGreetMsg(await invoke("greet", { name }));
   }
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
+        event.preventDefault();
+
+        const currentChatState = useStore.aiChatOpen.getState().aiChatOpen;
+
+        setAIChatOpen(!currentChatState);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [setAIChatOpen]); // Safe and never changes, keeping listeners stable
+
   const activeTab = openTabs.find((t) => t.path === activeTabPath) ?? null;
   const quotes = [
       "You're Editor should understand what you're building.",
@@ -165,7 +185,7 @@ function App() {
         </div>
         </div>
         {/*Right Sidebar*/}
-        <div className="">
+        <div className={AIChatOpen ? 'block' : 'hidden'}>
           <div className="absolute top-10 right-0 bottom-10">
             <RightSidebar />
           </div>

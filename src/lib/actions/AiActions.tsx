@@ -18,3 +18,7 @@ export async function getAiResponse(messages) {
         throw error;
     }
 }
+
+export async function indexProject(folderPath) {
+
+}

@@ -179,6 +179,10 @@ const recentFolders = create<{ recentFolders: string[]; setRecentFolders: (folde
     recentFolders: [],
     setRecentFolders: (folders) => set({ recentFolders: folders })
 }))
+const aiChatOpen = create<{ aiChatOpen: boolean; setOpen: (open: boolean) => void }>((set) => ({
+    aiChatOpen: true,
+    setOpen: (open) => set({aiChatOpen: open  })
+}))
 export const useStore =  {
     fileMenuOpen,
     fileExplorerOpen,
@@ -212,5 +216,6 @@ export const useStore =  {
     theme,
     quickEasyActionMenu,
   spotifyPanel,
-    recentFolders
+  recentFolders,
+    aiChatOpen
 }
