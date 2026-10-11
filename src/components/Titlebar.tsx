@@ -79,6 +79,7 @@ const Titlebar = () => {
       const folder = await open({ multiple: false, directory: true })
       if (folder) {
         useStore.folderName.getState().setFolderName(folder.split(/[\\/]/).filter(Boolean).pop() || folder)
+        setFolderPath(folder)
         console.log(folder)
         const fe = useStore.fileExplorerOpen.getState()
         const sm = useStore.searchMenuOpen.getState()

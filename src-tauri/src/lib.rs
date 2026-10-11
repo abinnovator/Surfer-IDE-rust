@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+use std::{any, fs};
+
 use serde::{Deserialize, Serialize};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
@@ -24,7 +27,10 @@ pub fn run() {
             read_file,
             save_file,
             get_ai_response,
-            summarize_file
+            summarize_file,
+            rename_path,
+            delete_file,
+            delete_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -61,10 +67,69 @@ fn save_file(path: &str, content: &str) -> Result<(), String> {
     std::fs::write(path, content).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn delete_file(path: PathBuf) -> Result<(), String> {
+    fs::remove_file(path).map_err(|err| err.to_string())
+}
+#[tauri::command]
+fn delete_folder(path: PathBuf) -> Result<(), String> {
+    fs::remove_dir_all(path).map_err(|err| err.to_string())
+}
+#[tauri::command]
+fn detect_stack(files: &[String]) -> Vec<String> {
+    let mut stack = Vec::new();
+
+    let any = |pred: &dyn Fn(&str) -> bool| files.iter().any(|f| pred(f));
+
+    if any(&|f| f.ends_with(".ts") || f.ends_with(".tsx")) {
+        stack.push("TypeScript".to_string());
+    }
+    if any(&|f| f.ends_with(".js") || f.ends_with(".jsx")) {
+        stack.push("JavaScript".to_string());
+    }
+    if any(&|f| f.ends_with(".py")) {
+        stack.push("Python".to_string());
+    }
+    if any(&|f| f.ends_with(".gd")) {
+        stack.push("Godot/GDScript".to_string());
+    }
+    if any(&|f| f.ends_with(".cs")) {
+        stack.push("C#".to_string());
+    }
+    if any(&|f| f.ends_with(".cpp")) {
+        stack.push("C Plus Plus".to_string());
+    }
+    if any(&|f| f.ends_with(".java")) {
+        stack.push("Java".to_string());
+    }
+    if any(&|f| f == "next.config.ts" || f == "next.config.js") {
+        stack.push("Next.js".to_string());
+    }
+    if any(&|f| f.ends_with(".tsx") || f.ends_with(".jsx")) {
+        stack.push("React".to_string());
+    }
+    if any(&|f| f.ends_with("project.godot")) {
+        stack.push("Godot 4".to_string());
+    }
+    if any(&|f| f == "Cargo.toml") {
+        stack.push("Rust".to_string());
+    }
+    if any(&|f| f == "bun.lock") {
+        stack.push("BUN".to_string());
+    }
+    if any(&|f| f == "pnpm-lock.yaml") {
+        stack.push("PNPM".to_string());
+    }
+    if any(&|f| f == "package-lock.yaml") {
+        stack.push("NPM".to_string());
+    }
+
+    stack
+}
 // #[tauri::command]
-// async fn index_project(path: &str) {
+// async fn indexProject(path: &str) {
 //     let files = get_all_files_in_folder(path);
-//     let url =
+//     for file in files {}
 // }
 #[tauri::command]
 async fn summarize_file(path: &str) -> Result<String, String> {
@@ -117,6 +182,10 @@ async fn summarize_file(path: &str) -> Result<String, String> {
     Ok(content.to_string())
 }
 
+#[tauri::command]
+fn rename_path(from: &str, to: &str) -> Result<(), String> {
+    std::fs::rename(from, to).map_err(|e| e.to_string())
+}
 #[tauri::command]
 async fn get_ai_response(messages: Vec<Message>) -> Result<String, String> {
     println!("Received {} messages in Rust", messages.len());

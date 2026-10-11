@@ -3,6 +3,7 @@ import { Files, GitGraph, List, Package, Search } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import FileTreeItem from "./FileTreeItem";
 import { readFile } from "../lib/actions/FileActions";
+import { invoke } from "@tauri-apps/api/core";
 
 interface SidebarColors {
   iconColor: string
@@ -17,6 +18,7 @@ interface SidebarColors {
   tabPaddingY?: string
   tabBorderRadius?: string
 }
+interface FileNode { name: string; path: string; is_dir: boolean }
 
 
 const LeftSidebar = () => {
@@ -67,6 +69,13 @@ const LeftSidebar = () => {
       }
       useStore.activeTabPath.getState().setActiveTabPath(entry.path)
     }
+  const refreshRoot = async () => {
+    console.log("refreshRoot called, folderPath:", folderPath);
+    if (!folderPath) return;
+    const files = await invoke<FileNode[]>("get_all_files_in_folder", { path: folderPath });
+    console.log("refreshRoot got", files.length, "files");
+    useStore.files.getState().setFiles([...files].sort((a, b) => Number(b.is_dir) - Number(a.is_dir) || a.name.localeCompare(b.name)));
+  };
   const togglePanel = useCallback(({ panel }: { panel: 'file-explorer' | 'search' | 'git' | 'task-list' | 'langPackPanel' }) => {
       const fe = useStore.fileExplorerOpen.getState()
       const sm = useStore.searchMenuOpen.getState()
@@ -91,7 +100,7 @@ const LeftSidebar = () => {
     const panelBorderStyle = { borderColor: sc.border }
   const inputStyle = { background: sc.iconHoverBg, color: sc.iconActiveColor }
   console.log(files)
-  const sortedFiles = files.sort((a, b) => Number(b.isDir) - Number(a.isDir));
+  const sortedFiles = [...files].sort((a, b) => Number(b.is_dir) - Number(a.is_dir));
   return (
     <div className="flex flex-row shrink-0 overflow-hidden">
       <div
@@ -133,7 +142,7 @@ const LeftSidebar = () => {
           </div>
           <div className="pt-4 overflow-x-hidden overflow-y-auto flex-1 min-h-0 thin-scroll">
             {sortedFiles.map((file) => (
-              <FileTreeItem key={file.path} entry={file} onClick={() => handleOpenFile(file)} />
+              <FileTreeItem key={file.path} entry={file} depth={0} onFileClick={handleOpenFile} onChanged={refreshRoot} />
             ))}
           </div>
         </div>

@@ -91,7 +91,7 @@ function App() {
       hidden={videoHidden}
        ref={videoRef}
       onLoadedData={() => {
-                  if (videoPlaying) videoRef.current?.play().catch(() => {});
+                  if (!videoPlaying) videoRef.current?.play().catch(() => {});
                 }}
       />
       <div className="h-full w-full overflow-hidden flex flex-col">
