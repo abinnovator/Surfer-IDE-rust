@@ -1,6 +1,13 @@
 import { invoke } from '@tauri-apps/api/core'
+import { readAllFilesInFolder } from './FileActions';
+import { useStore } from '../zustand';
 
+// AI Chat
 export async function getAiResponse(messages) {
+  const projectFolder = useStore.folderPath.getState().folderPath
+  if (!projectFolder) {
+    return "Please open a project first"
+  }
     try {
         const formattedMessages = messages.map(msg => ({
             role: msg.role || 'user',
@@ -8,8 +15,9 @@ export async function getAiResponse(messages) {
         }));
 
         console.log('Sending payload to Rust:', formattedMessages);
-
-        const response = await invoke('get_ai_response', { messages: formattedMessages });
+      const index = await invoke("read_file", { path: `${projectFolder}/surfer/index.json` })
+      console.log(index)
+        const response = await invoke('get_ai_response', { messages: formattedMessages, index: index });
         console.log('Received response from Rust:', response);
 
         return response;
@@ -19,6 +27,70 @@ export async function getAiResponse(messages) {
     }
 }
 
-export async function indexProject(folderPath) {
 
+// Indexing
+interface FileIndex {
+  path: string;
+  name: string;
+  extension: string;
+  summary: string;
+}
+
+interface FileNode {
+  path: string;
+  name: string;
+  is_dir: boolean;
+}
+
+export async function indexProject(folderPath: string) {
+  if (!folderPath) {
+    console.error("indexProject: no folderPath");
+    return;
+  }
+
+  const setIndexing = useStore.isIndexing.getState().setIsIndexing;
+  const setIndexLog = useStore.indexLog.getState().setIndexLog;
+
+  setIndexing(true);
+
+  try {
+    const files = (await readAllFilesInFolder(folderPath)) as FileNode[];
+    const toIndex = files.filter((f) => !f.is_dir);
+
+    const index: FileIndex[] = [];
+
+    for (let i = 0; i < toIndex.length; i++) {
+      const file = toIndex[i];
+      setIndexLog(`Indexing ${i + 1}/${toIndex.length}: ${file.name}`);
+
+      try {
+        const summary = await invoke<string>("summarize_file", { path: file.path });
+
+        index.push({
+          path: file.path,
+          name: file.name,
+          extension: file.name.includes(".") ? file.name.split(".").pop()! : "",
+          summary,
+        });
+      } catch (e) {
+        console.error(`Error summarizing ${file.path}:`, e);
+      }
+    }
+
+    const indexJsonContent = JSON.stringify(index, null, 2);
+
+    await invoke("create_file", {
+      path: `${folderPath}/surfer/index.json`,
+      content: indexJsonContent,
+    });
+
+    setIndexLog(`Indexed ${index.length} files`);
+    console.log(`Index written to ${folderPath}/surfer/index.json`);
+    setIndexing(false)
+  } catch (e) {
+    console.error("indexProject failed:", e);
+    setIndexLog("Index failed");
+  } finally {
+    setIndexing(false);
+  }
 }

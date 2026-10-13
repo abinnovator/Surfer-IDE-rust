@@ -101,6 +101,7 @@ const LeftSidebar = () => {
   const inputStyle = { background: sc.iconHoverBg, color: sc.iconActiveColor }
   console.log(files)
   const sortedFiles = [...files].sort((a, b) => Number(b.is_dir) - Number(a.is_dir));
+  const [searchFiles, setSearchFiles] = useState<FileNode[]>([])
   return (
     <div className="flex flex-row shrink-0 overflow-hidden">
       <div
@@ -155,6 +156,35 @@ const LeftSidebar = () => {
               Search through code
             </h1>
           </div>
+          {folderPath ? (
+            <div className="flex flex-col gap-2 p-2">
+              <input
+                className="w-full px-2 py-1 text-[12px] rounded outline-none"
+                style={{ background: sc.iconHoverBg, color: sc.iconActiveColor }}
+                placeholder="Search files…"
+                value={searchQuery}
+                onChange={(e) => {
+                  const q = e.target.value
+                  setSearchQuery(q)
+                  const all = useStore.files.getState().files as FileNode[]
+                  setSearchFiles(
+                    q ? all.filter(f => !f.is_dir && f.name.toLowerCase().includes(q.toLowerCase())) : []
+                  )
+                }}
+              />
+              <div className="flex flex-col gap-1 overflow-y-auto">
+                {searchQuery
+                  ? searchFiles.map((file) => (
+                      <FileTreeItem key={file.path} entry={file} depth={0} onFileClick={handleOpenFile} />
+                    ))
+                  : sortedFiles.filter(f => !f.is_dir).map((file) => (
+                      <FileTreeItem key={file.path} entry={file} depth={0} onFileClick={handleOpenFile} />
+                    ))}
+              </div>
+            </div>
+          ) : (
+            <p className="p-3 text-[11px]" style={{ color: sc.iconColor }}>Please open a project first</p>
+          )}
         </div>
       )}
       {gitMenuOpen && (

@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::{any, fs};
 
 use serde::{Deserialize, Serialize};
+use tokio::time::error::Error;
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 #[derive(Serialize, Deserialize)]
@@ -30,7 +31,8 @@ pub fn run() {
             summarize_file,
             rename_path,
             delete_file,
-            delete_folder
+            delete_folder,
+            create_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -74,6 +76,17 @@ fn delete_file(path: PathBuf) -> Result<(), String> {
 #[tauri::command]
 fn delete_folder(path: PathBuf) -> Result<(), String> {
     fs::remove_dir_all(path).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+fn create_file(path: PathBuf, content: String) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|err| err.to_string())?;
+    }
+
+    fs::write(path, content).map_err(|err| err.to_string())?;
+
+    Ok(())
 }
 #[tauri::command]
 fn detect_stack(files: &[String]) -> Vec<String> {
@@ -187,7 +200,8 @@ fn rename_path(from: &str, to: &str) -> Result<(), String> {
     std::fs::rename(from, to).map_err(|e| e.to_string())
 }
 #[tauri::command]
-async fn get_ai_response(messages: Vec<Message>) -> Result<String, String> {
+async fn get_ai_response(messages: Vec<Message>, index: Option<&str>) -> Result<String, String> {
+    let index_file = index.unwrap_or("No index was made. Ask the user to press the index button.");
     println!("Received {} messages in Rust", messages.len());
 
     let url = "https://openrouter.ai/api/v1/chat/completions";
@@ -197,7 +211,15 @@ async fn get_ai_response(messages: Vec<Message>) -> Result<String, String> {
     let body = serde_json::json!({
         "model": "@preset/surfer-chat-bot",
         "messages": messages,
-        "max_tokens": 1000
+        "max_tokens": 1000,
+        "transforms": [
+            {
+                "type": "user_defined",
+                "variables": {
+                    "indexFile": index_file
+                }
+            }
+        ]
     });
 
     let client = reqwest::Client::new();
