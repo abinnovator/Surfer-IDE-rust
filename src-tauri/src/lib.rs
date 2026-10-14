@@ -32,7 +32,10 @@ pub fn run() {
             rename_path,
             delete_file,
             delete_folder,
-            create_file
+            create_file,
+            git_status,
+            git_commit,
+            get_git_history
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -200,26 +203,41 @@ fn rename_path(from: &str, to: &str) -> Result<(), String> {
     std::fs::rename(from, to).map_err(|e| e.to_string())
 }
 #[tauri::command]
-async fn get_ai_response(messages: Vec<Message>, index: Option<&str>) -> Result<String, String> {
-    let index_file = index.unwrap_or("No index was made. Ask the user to press the index button.");
+async fn get_ai_response(messages: Vec<Message>, index: Option<String>) -> Result<String, String> {
+    let index_file = index.unwrap_or_else(|| {
+        "No index was made. Ask the user to press the index button.".to_string()
+    });
+
     println!("Received {} messages in Rust", messages.len());
 
     let url = "https://openrouter.ai/api/v1/chat/completions";
     let api_key = std::env::var("OPENROUTER_API_KEY")
         .map_err(|_| "OPENROUTER_API_KEY is not set in environment or .env file".to_string())?;
 
+    let system_prompt = format!(
+        "You are Surfer AI, a coding assistant built into the Surfer IDE. \
+         Your north star: your editor should understand what you're building, \
+         not just what you're typing. Be concise, helpful, and context-aware. \
+         Respond in markdown format and include code snippets when relevant.\n\n\
+         The following is an index of all the meaningful files in the project and what each does:\n\n{}",
+        index_file
+    );
+
+    let mut full_messages = vec![serde_json::json!({
+        "role": "system",
+        "content": system_prompt
+    })];
+    for m in &messages {
+        full_messages.push(serde_json::json!({
+            "role": m.role,
+            "content": m.content
+        }));
+    }
+
     let body = serde_json::json!({
-        "model": "@preset/surfer-chat-bot",
-        "messages": messages,
-        "max_tokens": 1000,
-        "transforms": [
-            {
-                "type": "user_defined",
-                "variables": {
-                    "indexFile": index_file
-                }
-            }
-        ]
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "messages": full_messages,
+        "max_tokens": 1000
     });
 
     let client = reqwest::Client::new();
@@ -246,4 +264,190 @@ async fn get_ai_response(messages: Vec<Message>, index: Option<&str>) -> Result<
         .ok_or_else(|| format!("Invalid response format: {}", text))?;
 
     Ok(content.to_string())
+}
+
+#[derive(Serialize)]
+struct GitChange {
+    path: String,
+    file: String,
+    status: String,
+}
+
+#[derive(Serialize)]
+struct GitStatus {
+    is_clean: bool,
+    current_branch: String,
+    ahead: i32,
+    behind: i32,
+    changes: Vec<GitChange>,
+}
+
+#[tauri::command]
+fn git_status(path: &str) -> Result<GitStatus, String> {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("status")
+        .arg("--porcelain=v1")
+        .arg("-b")
+        .output()
+        .map_err(|e| format!("failed to run git: {}", e))?;
+
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("git error: {}", err));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut lines = stdout.lines();
+
+    let mut current_branch = String::new();
+    let mut ahead = 0;
+    let mut behind = 0;
+
+    if let Some(header) = lines.next() {
+        let header = header.trim_start_matches("## ");
+        current_branch = header
+            .split("...")
+            .next()
+            .unwrap_or("")
+            .split_whitespace()
+            .next()
+            .unwrap_or("")
+            .to_string();
+
+        if let Some(start) = header.find('[') {
+            let bracket = &header[start + 1..header.find(']').unwrap_or(header.len())];
+            for part in bracket.split(',') {
+                let part = part.trim();
+                if let Some(n) = part.strip_prefix("ahead ") {
+                    ahead = n.trim().parse().unwrap_or(0);
+                } else if let Some(n) = part.strip_prefix("behind ") {
+                    behind = n.trim().parse().unwrap_or(0);
+                }
+            }
+        }
+    }
+
+    let mut changes = Vec::new();
+    for line in lines {
+        if line.len() < 3 {
+            continue;
+        }
+        let status = line[..2].trim().to_string();
+        let path_part = line[3..].to_string();
+        let file = path_part
+            .split('/')
+            .last()
+            .unwrap_or(&path_part)
+            .to_string();
+        changes.push(GitChange {
+            path: path_part,
+            file,
+            status,
+        });
+    }
+
+    Ok(GitStatus {
+        is_clean: changes.is_empty(),
+        current_branch,
+        ahead,
+        behind,
+        changes,
+    })
+}
+#[tauri::command]
+fn git_commit(path: &str, message: &str) -> Result<String, String> {
+    let add = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("add")
+        .arg("-A")
+        .output()
+        .map_err(|e| format!("failed to run git add: {}", e))?;
+    if !add.status.success() {
+        return Err(format!(
+            "git add failed: {}",
+            String::from_utf8_lossy(&add.stderr)
+        ));
+    }
+
+    let commit = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("commit")
+        .arg("-m")
+        .arg(message)
+        .output()
+        .map_err(|e| format!("failed to run git commit: {}", e))?;
+    if !commit.status.success() {
+        let stdout = String::from_utf8_lossy(&commit.stdout);
+        let stderr = String::from_utf8_lossy(&commit.stderr);
+        return Err(format!("git commit failed: {}{}", stdout, stderr));
+    }
+
+    let push = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("push")
+        .output()
+        .map_err(|e| format!("failed to run git push: {}", e))?;
+    if !push.status.success() {
+        let stderr = String::from_utf8_lossy(&push.stderr);
+        return Err(format!("Committed locally, but push failed: {}", stderr));
+    }
+
+    let commit_out = String::from_utf8_lossy(&commit.stdout);
+    let push_out = String::from_utf8_lossy(&push.stderr); // git push writes status to stderr
+    Ok(format!("{}\n{}", commit_out.trim(), push_out.trim()))
+}
+
+#[derive(serde::Serialize)]
+struct Commit {
+    hash: String,
+    author: String,
+    date: String,
+    message: String,
+}
+#[tauri::command]
+fn get_git_history(path: &str) -> Result<Vec<Commit>, String> {
+    let format_str = "%H%x1f%an%x1f%ad%x1f%s";
+
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("log")
+        .arg(format!("--format={}", format_str))
+        .output()
+        .map_err(|e| format!("failed to run git log: {}", e))?;
+
+    if !output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("git log failed: {}{}", stdout, stderr));
+    }
+
+    let raw_history = String::from_utf8(output.stdout)
+        .map_err(|e| format!("Failed to parse git output as UTF-8: {}", e))?;
+
+    let mut commits = Vec::new();
+
+    for line in raw_history.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        let parts: Vec<&str> = line.split('\x1f').collect();
+
+        if parts.len() == 4 {
+            commits.push(Commit {
+                hash: parts[0].to_string(),
+                author: parts[1].to_string(),
+                date: parts[2].to_string(),
+                message: parts[3].to_string(),
+            });
+        }
+    }
+
+    Ok(commits)
 }
