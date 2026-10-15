@@ -109,8 +109,8 @@ function App() {
           <LeftSidebar />
           {/*Tabs bar*/}
           <div
-            className="flex-1 overflow-hidden flex flex-col"
-            style={{ backgroundColor:'#0F0B08',  borderRadius:'0px', paddingLeft: '0px', paddingRight: '0px', paddingTop:'0px', paddingBottom:'0px' }}
+            className="flex-1 overflow-hidden flex flex-col rounded-2xl my-4"
+            style={{ backgroundColor:'#0F0B08', paddingLeft: '0px', paddingRight: '0px', paddingTop:'0px', paddingBottom:'0px' }}
           >
             {/* Tab bar */}
             {openTabs.length > 0 && (

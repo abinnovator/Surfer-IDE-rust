@@ -1,6 +1,6 @@
   import { useStore } from '../lib/zustand'
   import React, { useCallback, useState } from 'react'
-  import { ChevronDown, Maximize, Minimize, Minus, Play, ScanSearch, Settings, X } from 'lucide-react'
+  import { ChevronDown, Maximize, Minimize, Minus, Play, ScanSearch, ScanSquare, Settings, X } from 'lucide-react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open } from '@tauri-apps/plugin-dialog';
 import { readAllFilesInFolder } from '../lib/actions/FileActions'
@@ -56,6 +56,10 @@ const Titlebar = () => {
   const menuItemText = tb?.fileMenuItemTextColor || '#9A8A78'
   const menuHoverBg = tb?.fileMenuItemHoverBackground || '#3D3020'
   const menuHoverText = tb?.fileMenuItemHoverTextColor || '#E8C088'
+  const editorFloating = useStore.editorFloating((state) => state.floating)
+  const setFloating = useStore.editorFloating((state) => state.setFloating)
+
+  const toggleFloating = () => setFloating(!editorFloating)
   // pannel togelling
   const togglePanel = useCallback(({ panel }: { panel: 'file-explorer' | 'search' | 'git' | 'task-list' | 'langPackPanel' }) => {
       const fe = useStore.fileExplorerOpen.getState()
@@ -97,7 +101,7 @@ const Titlebar = () => {
       }
     }
   return (
-    <div className="flex flex-row items-center h-10 px-4 gap-4 flex-shrink-0 relative z-50 justify-between bg-[#1E1710] border-b-[#3d3020] border-b-2">
+    <div className={`flex flex-row items-center h-10 px-4 gap-4 flex-shrink-0 relative z-50 justify-between bg-[#1E1710] ${editorFloating ? 'rounded-2xl mt-2.5 mx-3.5 border-2 border-[#3d3020]': ' border-b-[#3d3020] border-b-2'}`}>
       {/*Left side*/}
       <div className="flex flex-row items-center gap-4">
         <div className="flex flex-row gap-4 items-center">
@@ -206,58 +210,65 @@ const Titlebar = () => {
       </div>
       {/*Right Side*/}
       <div className="flex flex-row gap-2 items-center">
-              <button
-                // onClick={runProject}
-                disabled={!folderPath}
-                title="Run project"
-                className={`${btnClass} disabled:opacity-40`}
-          data-tauri-drag-region
-              >
-                <Play size={20} />
-              </button>
-              <button
-                // onClick={() => window.ipcRenderer.openSettings()}
-                title="Settings"
-                className={btnClass}
-                style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-              >
-                <Settings size={20} />
-              </button>
-              <button
-                onClick={()=>indexProject(folderPath)}
-                disabled={indexing || !useStore.folderName.getState().folderName}
-                title="Index Project"
-                className={`${btnClass} disabled:opacity-40`}
-                style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-              >
-                <ScanSearch size={20} />
-              </button>
-              <button
-                onClick={toggleMaximize}
-                className={btnClass}
-              >
-                <Minus size={20} />
-              </button>
-              <button
-                onClick={toggleMaximize}
-                className={btnClass}
-              >
-                {minimized ? <Maximize size={20} /> : <Minimize size={20} />}
-              </button>
-              <button
-                // onClick={closeWindow}
-                className={btnClass}
-                onClick={closeWindow}
-              >
-                <X size={20} />
-              </button>
-            </div>
+        {/*Editor floating button*/}
+        <button className='' title='Floating UI' onClick={toggleFloating}>
+          <ScanSquare className={`${btnClass} ${editorFloating ?  'opacity-20': ''}`} />
 
-            {indexing && (
-              <p className="absolute left-1/2 -translate-x-1/2 text-[9px] px-3 animate-pulse pointer-events-none" style={{ color: titleColor }}>
-                {indexLog}
-              </p>
-            )}
+        </button>
+
+          {/*Project run button*/}
+          <button
+            // onClick={runProject}
+            disabled={!folderPath}
+            title="Run project"
+            className={`${btnClass} disabled:opacity-40`}
+      data-tauri-drag-region
+          >
+            <Play size={20} />
+          </button>
+          <button
+            // onClick={() => window.ipcRenderer.openSettings()}
+            title="Settings"
+            className={btnClass}
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          >
+            <Settings size={20} />
+          </button>
+          <button
+            onClick={()=>indexProject(folderPath)}
+            disabled={indexing || !useStore.folderName.getState().folderName}
+            title="Index Project"
+            className={`${btnClass} disabled:opacity-40`}
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          >
+            <ScanSearch size={20} />
+          </button>
+          <button
+            onClick={toggleMaximize}
+            className={btnClass}
+          >
+            <Minus size={20} />
+          </button>
+          <button
+            onClick={toggleMaximize}
+            className={btnClass}
+          >
+            {minimized ? <Maximize size={20} /> : <Minimize size={20} />}
+          </button>
+          <button
+            // onClick={closeWindow}
+            className={btnClass}
+            onClick={closeWindow}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {indexing && (
+          <p className="absolute left-1/2 -translate-x-1/2 text-[9px] px-3 animate-pulse pointer-events-none" style={{ color: titleColor }}>
+            {indexLog}
+          </p>
+        )}
 
     </div>
   )

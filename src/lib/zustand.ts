@@ -183,6 +183,10 @@ const aiChatOpen = create<{ aiChatOpen: boolean; setOpen: (open: boolean) => voi
     aiChatOpen: true,
     setOpen: (open) => set({aiChatOpen: open  })
 }))
+const editorFloating = create<{ floating: boolean; setFloating: (floating: boolean) => void }>((set) => ({
+  floating: true,
+  setFloating: (isfloaitng) => set({floating:isfloaitng})
+}))
 export const useStore =  {
     fileMenuOpen,
     fileExplorerOpen,
@@ -217,5 +221,6 @@ export const useStore =  {
     quickEasyActionMenu,
   spotifyPanel,
   recentFolders,
-    aiChatOpen
+  aiChatOpen,
+  editorFloating
 }

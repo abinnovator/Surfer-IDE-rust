@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { getAiResponse } from "../lib/actions/AiActions";
+import { useStore } from "../lib/zustand";
 
 const RightSidebar = () => {
   const [input, setInput] = useState("");
@@ -49,9 +50,11 @@ const RightSidebar = () => {
       handleSend();
     }
   };
+  const editorFloating = useStore.editorFloating((state)=> state.floating)
 
   return (
-    <div className="flex h-full max-h-full w-[250px] max-w-full flex-col justify-between overflow-hidden bg-[#16110B]/50">
+    <div className={`${editorFloating ? "px-9 py-2": ""}`}>
+    <div className={`flex h-full max-h-full w-[250px] max-w-full flex-col justify-between overflow-hidden bg-[#16110B]/50 ${editorFloating ? "rounded-2xl": ""}`}>
       <div className="flex flex-1 flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex-shrink-0 border-b-2 border-b-[#675D49] px-5 py-2">
@@ -100,6 +103,7 @@ const RightSidebar = () => {
         >
           <Send size={12} className="text-[#E8C088]" />
         </button>
+      </div>
       </div>
     </div>
   );

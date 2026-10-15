@@ -39,6 +39,7 @@ const LeftSidebar = () => {
   const [commitMessage, setCommitMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFiles, setSearchFiles] = useState<FileNode[]>([])
+  const editorFloating = useStore.editorFloating((state)=> state.floating)
 
   const ls = theme?.colors?.['left-sidebar']
   const ed = theme?.colors?.editor
@@ -80,7 +81,7 @@ const LeftSidebar = () => {
     }
   }
 
-  // refetch git whenever the folder changes
+  // jsdklfmskmdf - refetches whenever git is opened
   useEffect(() => {
     if (!folderPath) {
       setGitExists(false)
@@ -140,15 +141,15 @@ const LeftSidebar = () => {
     }
   }, [])
 
-  const panelClass = "flex flex-col w-52 border-r-2 flex-shrink-0"
+  const panelClass = `flex flex-col w-52 flex-shrink-0 ${editorFloating ? "rounded-2xl mx-3.5 border-2": "border-r-2"}`
   const panelHeaderStyle = { color: sc.iconColor, opacity: 0.5 }
   const panelBorderStyle = { borderColor: sc.border }
   const sortedFiles = [...files].sort((a, b) => Number(b.is_dir) - Number(a.is_dir))
 
   return (
-    <div className="flex flex-row shrink-0 overflow-hidden">
+    <div className={`flex flex-row shrink-0 overflow-hidden ${editorFloating ? "rounded-2xl px-9 py-4": ""}`}>
       <div
-        className="flex flex-col px-2 py-4 gap-6 w-12 flex-shrink-0 border-r-2"
+        className={`flex flex-col px-2 py-4 gap-6 w-12 flex-shrink-0  ${editorFloating ? "rounded-2xl border-2": "border-r-2"}`}
         style={{ background: stripBg, borderColor: sc.border }}
       >
         {([
