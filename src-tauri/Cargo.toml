@@ -30,6 +30,7 @@ reqwest = {version="0.12", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 schemars = "0.8"
 dotenvy = "0.15.7"
+portable-pty = "0.8"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

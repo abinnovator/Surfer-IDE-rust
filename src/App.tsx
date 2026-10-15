@@ -11,6 +11,7 @@ import Editor from "./components/Editor";
 import { X } from "lucide-react";
 import RightSidebar from "./components/RightSidebar";
 import StatusBar from "./components/Statusbar";
+import Terminal from "./components/Terminal";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -22,7 +23,9 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoPlaying = useStore.video((state) => state.video);
   const AIChatOpen = useStore.aiChatOpen((state) => state.aiChatOpen)
-  const setAIChatOpen = useStore.aiChatOpen((state)=> state.setOpen)
+  const setAIChatOpen = useStore.aiChatOpen((state) => state.setOpen)
+  const terminalOpen = useStore.terminalOpen((state) => state.terminalOpen);
+  const setTerminalOpen = useStore.terminalOpen((state)=> state.setTerminalOpen)
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -50,7 +53,6 @@ function App() {
         .setUnsavedFiles(currentUnsaved.filter((p) => p !== path));
     };
   async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     setGreetMsg(await invoke("greet", { name }));
   }
   useEffect(() => {
@@ -62,6 +64,13 @@ function App() {
 
         setAIChatOpen(!currentChatState);
       }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        const currentTerminalState = useStore.terminalOpen.getState().terminalOpen;
+
+        setTerminalOpen(!currentTerminalState);
+      }
+
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -69,7 +78,7 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [setAIChatOpen]); // Safe and never changes, keeping listeners stable
+  }, [setAIChatOpen, setTerminalOpen]);
 
   const activeTab = openTabs.find((t) => t.path === activeTabPath) ?? null;
   const quotes = [
@@ -182,14 +191,27 @@ function App() {
                 </>
               )}
             </div>
-        </div>
+            {terminalOpen && (
+                <div
+                  className="border-t-2 border-t-[#3d3020] flex-shrink-0"
+                  style={{ height: 240, background: '#0f0b08' }}
+                >
+                  <Terminal path={folderPath} id="1" />
+                </div>
+              )}
+
+          </div>
+          {/*AI sidebar*/}
+          {AIChatOpen && <RightSidebar />}
         </div>
         {/*Right Sidebar*/}
-        <div className={AIChatOpen ? 'block' : 'hidden'}>
+        {/*<div className={AIChatOpen ? 'block' : 'hidden'}>
           <div className="absolute top-10 right-0 bottom-10">
             <RightSidebar />
           </div>
-        </div>
+        </div>*/}
+
+
         {/*Status Bar*/}
         <div className="shrink-0">
           <StatusBar />

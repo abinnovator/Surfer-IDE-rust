@@ -1,5 +1,7 @@
+mod terminal;
 use std::path::PathBuf;
 use std::{any, fs};
+use terminal::TerminalState;
 
 use serde::{Deserialize, Serialize};
 use tokio::time::error::Error;
@@ -19,6 +21,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     dotenvy::dotenv().ok();
     tauri::Builder::default()
+        .manage(TerminalState::default())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -35,7 +38,11 @@ pub fn run() {
             create_file,
             git_status,
             git_commit,
-            get_git_history
+            get_git_history,
+            terminal::spawn_terminal,
+            terminal::write_to_terminal,
+            terminal::resize_terminal,
+            terminal::close_terminal
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
