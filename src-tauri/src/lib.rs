@@ -210,16 +210,18 @@ fn rename_path(from: &str, to: &str) -> Result<(), String> {
     std::fs::rename(from, to).map_err(|e| e.to_string())
 }
 #[tauri::command]
-async fn get_ai_response(messages: Vec<Message>, index: Option<String>) -> Result<String, String> {
+async fn get_ai_response(
+    messages: Vec<Message>,
+    index: Option<String>,
+    token: &str,
+) -> Result<String, String> {
     let index_file = index.unwrap_or_else(|| {
         "No index was made. Ask the user to press the index button.".to_string()
     });
 
     println!("Received {} messages in Rust", messages.len());
 
-    let url = "https://openrouter.ai/api/v1/chat/completions";
-    let api_key = std::env::var("OPENROUTER_API_KEY")
-        .map_err(|_| "OPENROUTER_API_KEY is not set in environment or .env file".to_string())?;
+    let url = "https://surfer.aaditbhambri.com/api/groq";
 
     let system_prompt = format!(
         "You are Surfer AI, a coding assistant built into the Surfer IDE. \
@@ -242,15 +244,15 @@ async fn get_ai_response(messages: Vec<Message>, index: Option<String>) -> Resul
     }
 
     let body = serde_json::json!({
-        "model": "meta-llama/llama-3.3-70b-instruct",
-        "messages": full_messages,
-        "max_tokens": 1000
+        "messages": messages,
+        "system": system_prompt,
+        "stream": false
     });
 
     let client = reqwest::Client::new();
     let response = client
         .post(url)
-        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Authorization", format!("Bearer {}", token))
         .header("Content-Type", "application/json")
         .json(&body)
         .send()
@@ -265,11 +267,9 @@ async fn get_ai_response(messages: Vec<Message>, index: Option<String>) -> Resul
     }
 
     let data: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-
-    let content = data["choices"][0]["message"]["content"]
+    let content = data["message"] // ← was choices[0].message.content
         .as_str()
         .ok_or_else(|| format!("Invalid response format: {}", text))?;
-
     Ok(content.to_string())
 }
 

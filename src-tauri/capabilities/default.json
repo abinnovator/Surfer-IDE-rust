@@ -17,6 +17,10 @@
     "core:window:allow-set-fullscreen",
     "dialog:default",
     "fs:default",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-is-fullscreen",
+    "core:window:allow-set-fullscreen",
+    "core:window:allow-internal-toggle-maximize",
     { "identifier": "fs:allow-read-file", "allow": [{ "path": "**" }] }
   ]
 }

@@ -41,6 +41,10 @@ const Titlebar = () => {
     await appWindow.toggleMaximize()
     setMinimized(await appWindow.isMaximized())
   }, [appWindow, setMinimized])
+  const toggleFullscreen = useCallback(async () => {
+    const isFull = await appWindow.isFullscreen()
+    await appWindow.setFullscreen(!isFull)
+  }, [appWindow])
   const theme = useStore.theme((state) => state.theme)
   const tb = theme?.colors?.titlebar
   const floating = theme?.floating
@@ -101,7 +105,7 @@ const Titlebar = () => {
       }
     }
   return (
-    <div className={`flex flex-row items-center h-10 px-4 gap-4 flex-shrink-0 relative z-50 justify-between bg-[#1E1710] ${editorFloating ? 'rounded-2xl mt-2.5 mx-3.5 border-2 border-[#3d3020]': ' border-b-[#3d3020] border-b-2'}`}>
+    <div className={`flex flex-row items-center h-10 px-4 gap-4 flex-shrink-0 relative z-50 justify-between bg-[#1E1710] ${editorFloating ? 'rounded-2xl mt-2.5 mx-8 border-2 border-[#3d3020]': ' border-b-[#3d3020] border-b-2'}`}>
       {/*Left side*/}
       <div className="flex flex-row items-center gap-4">
         <div className="flex flex-row gap-4 items-center">
@@ -243,16 +247,13 @@ const Titlebar = () => {
           >
             <ScanSearch size={20} />
           </button>
-          <button
-            onClick={toggleMaximize}
-            className={btnClass}
-          >
+          {/* Minimize */}
+          <button onClick={minimizeWindow} className={btnClass}>
             <Minus size={20} />
           </button>
-          <button
-            onClick={toggleMaximize}
-            className={btnClass}
-          >
+
+          {/* Fullscreen toggle */}
+          <button onClick={toggleFullscreen} className={btnClass}>
             {minimized ? <Maximize size={20} /> : <Minimize size={20} />}
           </button>
           <button

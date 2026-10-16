@@ -25,7 +25,8 @@ function App() {
   const AIChatOpen = useStore.aiChatOpen((state) => state.aiChatOpen)
   const setAIChatOpen = useStore.aiChatOpen((state) => state.setOpen)
   const terminalOpen = useStore.terminalOpen((state) => state.terminalOpen);
-  const setTerminalOpen = useStore.terminalOpen((state)=> state.setTerminalOpen)
+  const setTerminalOpen = useStore.terminalOpen((state) => state.setTerminalOpen)
+  const editorFloating = useStore.editorFloating((state)=> state.floating)
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -109,7 +110,7 @@ function App() {
           <LeftSidebar />
           {/*Tabs bar*/}
           <div
-            className="flex-1 overflow-hidden flex flex-col rounded-2xl my-4"
+            className={`flex-1 overflow-hidden flex flex-col ${editorFloating ? 'rounded-2xl my-4 border-2 border-[#3d3020]': ''}`}
             style={{ backgroundColor:'#0F0B08', paddingLeft: '0px', paddingRight: '0px', paddingTop:'0px', paddingBottom:'0px' }}
           >
             {/* Tab bar */}
@@ -123,7 +124,7 @@ function App() {
                   borderTopRightRadius: '0px',
                 }}
               >
-                {openTabs.map((tab) => (
+                {openTabs.map((tab, index) => (
                   <div
                     key={tab.path}
                     onClick={() =>
@@ -131,14 +132,14 @@ function App() {
                         .getState()
                         .setActiveTabPath(tab.path)
                     }
-                    className="flex items-center gap-2 px-3 py-1.5 text-[11px] cursor-pointer shrink-0 border-r border-r-[#3D3020] group transition-colors"
+                    className={`flex items-center gap-2 px-3 py-1.5 text-[11px] cursor-pointer shrink-0 border-r border-r-[#3D3020] group transition-colors ${index == 0 && editorFloating ? 'rounded-tl-2xl': ''}`}
                     style={
                       tab.path === activeTabPath
                         ? {
                             color: '#E8C088',
                             backgroundColor:
                              '#0F0B08',
-                            borderTop: `1px solid ${'#E8C088'}`,
+                            borderTop: `1px solid ${editorFloating? '':'#E8C088'}`,
                           }
                         : {
                             color:

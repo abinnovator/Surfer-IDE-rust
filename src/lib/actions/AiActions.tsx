@@ -3,7 +3,7 @@ import { readAllFilesInFolder } from './FileActions';
 import { useStore } from '../zustand';
 
 // AI Chat
-export async function getAiResponse(messages) {
+export async function getAiResponse(messages: {role: string, content: string}[], token: string, workspaceRoot: string | null) {
   const projectFolder = useStore.folderPath.getState().folderPath
   if (!projectFolder) {
     return "Please open a project first"
@@ -17,7 +17,7 @@ export async function getAiResponse(messages) {
         console.log('Sending payload to Rust:', formattedMessages);
       const index = await invoke("read_file", { path: `${projectFolder}/surfer/index.json` })
       console.log(index)
-        const response = await invoke('get_ai_response', { messages: formattedMessages, index: index });
+      const response = await invoke('get_ai_response', { messages: formattedMessages, index: index , token: token});
         console.log('Received response from Rust:', response);
 
         return response;

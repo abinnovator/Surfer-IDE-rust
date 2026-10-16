@@ -9,7 +9,7 @@ const StatusBar = () => {
   const editorFloating = useStore.editorFloating((state)=> state.floating)
 
   return (
-    <div className={`flex flex-row justify-between items-center py-2 px-2 text-[#3D3020] bg-[#130E0B]/50 ${editorFloating ? "rounded-2xl mx-3.5 border-2 border-[#3d3020] my-2": ""}`}>
+    <div className={`flex flex-row justify-between items-center py-2 px-2 text-[#3D3020] bg-[#130E0B]/50 ${editorFloating ? "rounded-2xl mx-8 border-2 border-[#3d3020] my-2": ""}`}>
       <div className='flex flex-row gap-3 items-center'>
         <h1 className='text-[13px]'>Project: {folder}</h1>
         <button onClick={() => useStore.video.getState().setVideo(!useStore.video.getState().video)} className="cursor-pointer">
