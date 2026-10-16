@@ -89,7 +89,7 @@ function App() {
     ];
   const quote = quotes[Math.floor(Math.random() * quotes.length)];
   const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg'];
-  const videoHidden = useStore.videoEnabled((state) => state.videoEnabled);
+  const videoEnabled = useStore.videoEnabled((state) => state.videoEnabled);
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#1e1e1e]">
       <video
@@ -98,10 +98,10 @@ function App() {
       muted
       className="absolute inset-0 w-full h-full object-cover pointer-events-none"
       style={{ opacity: 0.15, zIndex: 0 }}
-      hidden={videoHidden}
+      hidden={!videoEnabled}
        ref={videoRef}
       onLoadedData={() => {
-                  if (!videoPlaying) videoRef.current?.play().catch(() => {});
+                  if (videoPlaying) videoRef.current?.play().catch(() => {});
                 }}
       />
       <div className="h-full w-full overflow-hidden flex flex-col">

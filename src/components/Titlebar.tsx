@@ -221,7 +221,7 @@ const Titlebar = () => {
         </button>
 
           {/*Project run button*/}
-          <button
+          {/*<button
             // onClick={runProject}
             disabled={!folderPath}
             title="Run project"
@@ -229,15 +229,15 @@ const Titlebar = () => {
       data-tauri-drag-region
           >
             <Play size={20} />
-          </button>
-          <button
+          </button>*/}
+          {/*<button
             // onClick={() => window.ipcRenderer.openSettings()}
             title="Settings"
             className={btnClass}
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           >
             <Settings size={20} />
-          </button>
+          </button>*/}
           <button
             onClick={()=>indexProject(folderPath)}
             disabled={indexing || !useStore.folderName.getState().folderName}
