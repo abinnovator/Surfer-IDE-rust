@@ -2,7 +2,7 @@
 ![alt text](image.png)
 > Your editor should understand what you're building, not just what you're typing.
 
-Surfer is the IDE built for small studios. Context-aware AI that switches models per framework, a multi-agent task panel that builds entire features autonomously, and lang packs for every domain.
+Surfer is the IDE built for small studios. Context-aware AI that switches models per framework, a multi-agent task panel that builds entire features autonomously, and lang packs for every domain.(task panel and lang packs comign soon)
 
 ---
 
@@ -19,15 +19,15 @@ Indexing creates a summary of every file in your project, giving AI agents and t
 ## What makes surfer IDE great?
 Its ability to adapt to your project. The indexing feature allows the LLM to know where each file is and what it does. This helps it help you debug better and generate code faster.
 
-Also the vibrant and cosy theme amkes it seem more welcoming.
-In the futurure I will port inbuilt hackatime, custom themes and the task panel:D Till then bear with me.
+The vibrant and cosy theme also makes it seem more welcoming.
+In the futurure I will port inbuilt wakatime, custom themes and the task panel:D Till then bear with me.
 
 (If you think this is ai its not. except for the themes part.:))
 
 # Run locally
 - Clone the repo ```git clone https://github.com/abinnovator/Surfer-IDE-rust```
 - cd into the folder 
-- run ```npm install``` to install the dependicies
+- run ```npm install``` to install the dependenicies
 - To boot up the app then run ```npm run tauri dev```
  # Download steps
 - Download the newest .dmg
