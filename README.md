@@ -23,3 +23,13 @@ Also the vibrant and cosy theme amkes it seem more welcoming.
 In the futurure I will port inbuilt hackatime, custom themes and the task panel:D Till then bear with me.
 
 (If you think this is ai its not. except for the themes part.:))
+
+# Run locally
+- Clone the repo ```git clone https://github.com/abinnovator/Surfer-IDE-rust```
+- cd into the folder 
+- run ```npm install``` to install the dependicies
+- To boot up the app then run ```npm run tauri dev```
+ # Download steps
+- Download the newest .dmg
+- Install the app
+- It will say that the app is damaged. Run - xattr -cr /Applications/surfer-ide.app
