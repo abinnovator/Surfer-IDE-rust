@@ -135,12 +135,30 @@ export default function Editor({ content, fileName, filePath, onSave, onKeystrok
         {
           key: 'Mod-s',
           run: (view) => {
-            onSave?.(view.state.doc.toString())
-            saveFile(filePath, view.state.doc.toString())
-            useStore.unsavedFiles.getState().setUnsavedFiles(
-              useStore.unsavedFiles.getState().unsavedFiles.filter(p => p !== filePath)
-            )
-            return true
+            const text = view.state.doc.toString()
+                const doSave = async () => {
+                  let path = filePath
+                  if (path.startsWith('untitled://')) {
+                    const { save } = await import('@tauri-apps/plugin-dialog')
+                    const chosen = await save({ defaultPath: fileName })
+                    if (!chosen) return
+                    path = chosen
+                    const tabs = useStore.openTabs.getState().openTabs
+                    useStore.openTabs.getState().setOpenTabs(
+                      tabs.map(t => t.path === filePath
+                        ? { ...t, path, name: path.split(/[\\/]/).pop() || t.name }
+                        : t)
+                    )
+                    useStore.activeTabPath.getState().setActiveTabPath(path)
+                  }
+                  await saveFile(path, text)
+                  onSave?.(text)
+                  useStore.unsavedFiles.getState().setUnsavedFiles(
+                    useStore.unsavedFiles.getState().unsavedFiles.filter(p => p !== filePath)
+                  )
+                }
+                doSave()
+                return true
           }
         },
       ]),

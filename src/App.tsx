@@ -26,7 +26,9 @@ function App() {
   const setAIChatOpen = useStore.aiChatOpen((state) => state.setOpen)
   const terminalOpen = useStore.terminalOpen((state) => state.terminalOpen);
   const setTerminalOpen = useStore.terminalOpen((state) => state.setTerminalOpen)
-  const editorFloating = useStore.editorFloating((state)=> state.floating)
+  const editorFloating = useStore.editorFloating((state) => state.floating)
+
+
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
@@ -36,6 +38,13 @@ function App() {
       el.pause();
     }
   }, [videoPlaying]);
+  useEffect(() =>
+  {
+    const savedRecentFoders = localStorage.getItem("surfer_recent_folders")
+    if (savedRecentFoders)
+    {useStore.recentFolders.getState().setRecentFolders(JSON.parse(savedRecentFoders))}
+
+    })
   const handleCloseTab = (path: string, e: React.MouseEvent) => {
       e.stopPropagation();
       const current = useStore.openTabs.getState().openTabs;

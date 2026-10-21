@@ -39,7 +39,9 @@ const LeftSidebar = () => {
   const [commitMessage, setCommitMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFiles, setSearchFiles] = useState<FileNode[]>([])
-  const editorFloating = useStore.editorFloating((state)=> state.floating)
+  const editorFloating = useStore.editorFloating((state) => state.floating)
+  const [allFiles, setAllFiles] = useState<FileNode[]>([])
+
 
   const ls = theme?.colors?.['left-sidebar']
   const ed = theme?.colors?.editor
@@ -89,9 +91,16 @@ const LeftSidebar = () => {
       setGitHistory([])
       return
     }
+    if (!searchMenuOpen) {
+      return
+    } else {
+      invoke("get_all_files_recursive", { path: folderPath }).then(setAllFiles)
+
+    }
+
     loadGitStatus()
     getGitHistory()
-  }, [folderPath])
+  }, [folderPath, searchMenuOpen])
 
   const handleOpenFile = async (entry: { path: string; name: string }) => {
     const currentTabs = useStore.openTabs.getState().openTabs
@@ -206,12 +215,11 @@ const LeftSidebar = () => {
                 onChange={(e) => {
                   const q = e.target.value
                   setSearchQuery(q)
-                  const all = useStore.files.getState().files as FileNode[]
-                  setSearchFiles(q ? all.filter(f => !f.is_dir && f.name.toLowerCase().includes(q.toLowerCase())) : [])
+                  setSearchFiles(q ? allFiles.filter(f=> f.name.toLowerCase().includes(q.toLowerCase())) : [])
                 }}
               />
               <div className="flex flex-col gap-1 overflow-y-auto flex-1 min-h-0 panel-scroll">
-                {(searchQuery ? searchFiles : sortedFiles.filter(f => !f.is_dir)).map((file) => (
+                {(searchQuery ? searchFiles : allFiles).map((file) => (
                   <FileTreeItem key={file.path} entry={file} depth={0} onFileClick={handleOpenFile} />
                 ))}
               </div>

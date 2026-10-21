@@ -5,6 +5,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { open } from '@tauri-apps/plugin-dialog';
 import { readAllFilesInFolder } from '../lib/actions/FileActions'
 import { indexProject } from '../lib/actions/AiActions';
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow';
 interface FileNode { name: string; path: string; isDir: boolean }
 
 
@@ -98,12 +99,49 @@ const Titlebar = () => {
         const lp = useStore.langPackOpen.getState()
         fe.setFileExplorerOpen(true); sm.setSearchMenuOpen(false); gm.setGitMenuOpen(false); tl.setTaskListOpen(false); lp.setLangPackOpen(false);
         setFileMenuOpen(false)
-        setRecentFolders([...recentFolders, folder])
+        const updatedRecentFolders = [...recentFolders, folder].slice(0, 10);
+        setRecentFolders([...recentFolders, folder]);
+        localStorage.setItem("surfer_recent_folders", JSON.stringify(updatedRecentFolders))
         const filesInFolder = await readAllFilesInFolder(folder) as FileNode[];
         console.log(filesInFolder)
         setFiles(filesInFolder)
       }
     }
+  const openNewWindow = () => {
+    new WebviewWindow(`surfer-${Date.now()}`, {
+      url: '/',
+      title: 'Surfer IDE',
+      decorations: false,
+    })
+  }
+  const openFolderFromPath =async (folder: string) => {
+    useStore.folderName.getState().setFolderName(folder.split(/[\\/]/).filter(Boolean).pop() || folder)
+    setFolderPath(folder)
+    console.log(folder)
+    const fe = useStore.fileExplorerOpen.getState()
+    const sm = useStore.searchMenuOpen.getState()
+    const gm = useStore.gitMenuOpen.getState()
+    const tl = useStore.taskListOpen.getState()
+    const lp = useStore.langPackOpen.getState()
+    fe.setFileExplorerOpen(true); sm.setSearchMenuOpen(false); gm.setGitMenuOpen(false); tl.setTaskListOpen(false); lp.setLangPackOpen(false);
+    setFileMenuOpen(false)
+    setRecentFolders([...recentFolders, folder])
+    const filesInFolder = await readAllFilesInFolder(folder) as FileNode[];
+    console.log(filesInFolder)
+    setFiles(filesInFolder)
+  }
+  const handleCreateNewFile = () => {
+    const id = Date.now()
+    const tab = {
+      path: `untitled://${id}`,
+      name: 'Untitled',
+      content: ''
+    }
+    const currentTabs = useStore.openTabs.getState().openTabs
+    useStore.openTabs.getState().setOpenTabs([...currentTabs, tab])
+    useStore.activeTabPath.getState().setActiveTabPath(tab.path)
+    setFileMenuOpen(false)
+  }
   return (
     <div className={`flex flex-row items-center h-10 px-4 gap-4 flex-shrink-0 relative z-50 justify-between bg-[#1E1710] ${editorFloating ? 'rounded-2xl mt-2.5 mx-8 border-2 border-[#3d3020]': ' border-b-[#3d3020] border-b-2'}`}>
       {/*Left side*/}
@@ -148,7 +186,8 @@ const Titlebar = () => {
                               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = menuHoverBg; (e.currentTarget as HTMLElement).style.color = menuHoverText }}
                               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = menuItemText }}
                               title={p}
-                                                        >
+                              onClick={()=>openFolderFromPath(p)}
+                              >
                               {p.split(/[\\/]/).filter(Boolean).pop()}
                               <span className="block text-[9px] truncate" style={{ color: menuItemText, opacity: 0.5 }}>{p}</span>
                             </button>
@@ -162,23 +201,18 @@ const Titlebar = () => {
                         style={{ color: menuItemText }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = menuHoverBg; (e.currentTarget as HTMLElement).style.color = menuHoverText }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = menuItemText }}
+                        onClick={handleCreateNewFile}
                       >
                         New File
                       </button>
+
                       <button
                         className={menuItemClass}
                         style={{ color: menuItemText }}
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = menuHoverBg; (e.currentTarget as HTMLElement).style.color = menuHoverText }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = menuItemText }}
-                      >
-                        Save
-                      </button>
-                      <button
-                        className={menuItemClass}
-                        style={{ color: menuItemText }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = menuHoverBg; (e.currentTarget as HTMLElement).style.color = menuHoverText }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = ''; (e.currentTarget as HTMLElement).style.color = menuItemText }}
-                                                title="shift+n"
+                        onClick={openNewWindow}
+
                       >
                         Create new window
                       </button>

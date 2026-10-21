@@ -1,5 +1,5 @@
 mod terminal;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{any, fs};
 use terminal::TerminalState;
 
@@ -42,7 +42,8 @@ pub fn run() {
             terminal::spawn_terminal,
             terminal::write_to_terminal,
             terminal::resize_terminal,
-            terminal::close_terminal
+            terminal::close_terminal,
+            get_all_files_recursive
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -457,4 +458,45 @@ fn get_git_history(path: &str) -> Result<Vec<Commit>, String> {
     }
 
     Ok(commits)
+}
+#[tauri::command]
+fn get_all_files_recursive(path: &Path) -> Vec<FileNode> {
+    let ignored = [
+        "node_modules",
+        ".git",
+        "dist",
+        ".next",
+        ".godot",
+        ".surfer",
+        "surfer",
+        ".import",
+        "venv",
+        "__pycache__",
+        "vscode",
+    ];
+    let mut files = Vec::new();
+    walk(path, &ignored, &mut files);
+    files
+}
+fn walk(dir: &Path, ignored: &[&str], out: &mut Vec<FileNode>) {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if ignored.contains(&name.as_str()) {
+            continue;
+        }
+        let p = entry.path();
+        if p.is_dir() {
+            walk(&p, ignored, out);
+        } else {
+            out.push(FileNode {
+                name,
+                path: p.to_string_lossy().into_owned(),
+                is_dir: false,
+            })
+        }
+    }
 }

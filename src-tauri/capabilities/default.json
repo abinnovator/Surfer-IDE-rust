@@ -3,7 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": [
-    "main"
+    "main", "surfer-*"
   ],
   "permissions": [
     "core:default",
@@ -21,6 +21,8 @@
     "core:window:allow-is-fullscreen",
     "core:window:allow-set-fullscreen",
     "core:window:allow-internal-toggle-maximize",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-create",
     { "identifier": "fs:allow-read-file", "allow": [{ "path": "**" }] }
   ]
 }
