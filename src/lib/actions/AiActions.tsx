@@ -52,10 +52,18 @@ export async function indexProject(folderPath: string) {
   const setIndexLog = useStore.indexLog.getState().setIndexLog;
 
   setIndexing(true);
-
+  const token = localStorage.getItem('surfer_token') ?? ''
+  if (token === '') {
+    return
+  }
   try {
-    const files = (await readAllFilesInFolder(folderPath)) as FileNode[];
-    const toIndex = files.filter((f) => !f.is_dir);
+    const codeExts = ['ts','tsx','js','jsx','py','rs','go','gd','cs','java','css','html','json','md','c','cpp','h','hpp','vue','svelte','rb','php','swift','kt']
+
+    const files = await invoke<FileNode[]>("get_all_files_recursive", { path: folderPath })
+    const toIndex = files.filter(f =>
+      !f.is_dir &&
+      codeExts.includes(f.name.split('.').pop()?.toLowerCase() ?? '')
+    )
 
     const index: FileIndex[] = [];
 
@@ -64,7 +72,7 @@ export async function indexProject(folderPath: string) {
       setIndexLog(`Indexing ${i + 1}/${toIndex.length}: ${file.name}`);
 
       try {
-        const summary = await invoke<string>("summarize_file", { path: file.path });
+        const summary = await invoke<string>("summarize_file", { path: file.path, token: token });
 
         index.push({
           path: file.path,

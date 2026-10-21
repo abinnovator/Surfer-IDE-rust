@@ -156,56 +156,43 @@ fn detect_stack(files: &[String]) -> Vec<String> {
 //     for file in files {}
 // }
 #[tauri::command]
-async fn summarize_file(path: &str) -> Result<String, String> {
+async fn summarize_file(path: &str, token: &str) -> Result<String, String> {
     let mut file_content = read_file(path);
-
     if file_content.len() < 30 {
         return Ok(String::from("Empty or minimal file"));
     }
-
     if file_content.len() > 8000 {
         file_content = file_content.chars().take(8000).collect();
         file_content.push_str("\n...(truncated)");
     }
 
-    let url = "https://openrouter.ai/api/v1/chat/completions";
-    let api_key = std::env::var("OPENROUTER_API_KEY")
-        .map_err(|_| "OPENROUTER_API_KEY is not set in environment or .env file".to_string())?;
-
-    let prompt = format!("Summarize this file in one line:\n\n{}", file_content);
+    let url = "https://surfer.aaditbhambri.com/api/groq";
+    let prompt = format!("Summarize this file in one line. Dont describe the whole project just what the file appears to do. :\n\n{}", file_content);
 
     let body = serde_json::json!({
-        "model": "meta-llama/llama-3.3-70b-instruct",
         "messages": [{ "role": "user", "content": prompt }],
-        "max_tokens": 60
+        "stream": false
     });
 
     let client = reqwest::Client::new();
     let response = client
         .post(url)
-        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Authorization", format!("Bearer {}", token)) // ← user token, no OpenRouter key
         .header("Content-Type", "application/json")
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Reqwest network error: {}", e))?;
+        .map_err(|e| format!("network error: {}", e))?;
 
     let status = response.status();
     let text = response.text().await.map_err(|e| e.to_string())?;
-
     if !status.is_success() {
-        return Err(format!("API error status {}: {}", status, text));
+        return Err(format!("API error {}: {}", status, text));
     }
 
     let data: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-
-    let content = data["choices"][0]["message"]["content"]
-        .as_str()
-        .ok_or_else(|| format!("Invalid response format: {}", text))?;
-
-    Ok(content.to_string())
+    Ok(data["message"].as_str().unwrap_or("").to_string()) // ← your route returns { message }
 }
-
 #[tauri::command]
 fn rename_path(from: &str, to: &str) -> Result<(), String> {
     std::fs::rename(from, to).map_err(|e| e.to_string())
