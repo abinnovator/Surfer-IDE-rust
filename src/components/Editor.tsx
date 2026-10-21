@@ -166,6 +166,13 @@ export default function Editor({ content, fileName, filePath, onSave, onKeystrok
       ...(lang ? [lang] : []),
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
+          const updatedContent = update.state.doc.toString()
+          const tabs = useStore.openTabs.getState().openTabs
+          useStore.openTabs.getState().setOpenTabs(
+            tabs.map((tab) => tab.path === filePath
+              ? { ...tab, content: updatedContent }
+              : tab)
+          )
           onKeystroke?.()
           const unsaved = useStore.unsavedFiles.getState().unsavedFiles
           if (!unsaved.includes(filePath)) {

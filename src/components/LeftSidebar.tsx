@@ -83,7 +83,6 @@ const LeftSidebar = () => {
     }
   }
 
-  // jsdklfmskmdf - refetches whenever git is opened
   useEffect(() => {
     if (!folderPath) {
       setGitExists(false)
@@ -91,15 +90,13 @@ const LeftSidebar = () => {
       setGitHistory([])
       return
     }
-    if (!searchMenuOpen) {
-      return
-    } else {
-      invoke("get_all_files_recursive", { path: folderPath }).then(setAllFiles)
-
-    }
-
     loadGitStatus()
     getGitHistory()
+  }, [folderPath])
+
+  useEffect(() => {
+    if (!searchMenuOpen || !folderPath) return
+    invoke<FileNode[]>("get_all_files_recursive", { path: folderPath }).then(setAllFiles)
   }, [folderPath, searchMenuOpen])
 
   const handleOpenFile = async (entry: { path: string; name: string }) => {

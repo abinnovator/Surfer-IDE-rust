@@ -12,6 +12,8 @@ import { X } from "lucide-react";
 import RightSidebar from "./components/RightSidebar";
 import StatusBar from "./components/Statusbar";
 import Terminal from "./components/Terminal";
+import UnsavedChangesModal from "./components/UnsavedChangesModal";
+import { saveFile } from "./lib/actions/FileActions";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -27,6 +29,11 @@ function App() {
   const terminalOpen = useStore.terminalOpen((state) => state.terminalOpen);
   const setTerminalOpen = useStore.terminalOpen((state) => state.setTerminalOpen)
   const editorFloating = useStore.editorFloating((state) => state.floating)
+  const [pendingCloseTab, setPendingCloseTab] = useState<{
+    path: string
+    name: string
+    content: string
+  } | null>(null)
 
 
   useEffect(() => {
@@ -45,23 +52,60 @@ function App() {
     {useStore.recentFolders.getState().setRecentFolders(JSON.parse(savedRecentFoders))}
 
     })
-  const handleCloseTab = (path: string, e: React.MouseEvent) => {
-      e.stopPropagation();
-      const current = useStore.openTabs.getState().openTabs;
-      const remaining = current.filter((t) => t.path !== path);
-      useStore.openTabs.getState().setOpenTabs(remaining);
-      if (activeTabPath === path) {
-        useStore.activeTabPath
-          .getState()
-          .setActiveTabPath(
-            remaining.length > 0 ? remaining[remaining.length - 1].path : '',
-          );
+  const closeTab = (path: string) => {
+    const current = useStore.openTabs.getState().openTabs;
+    const remaining = current.filter((tab) => tab.path !== path);
+    useStore.openTabs.getState().setOpenTabs(remaining);
+    if (useStore.activeTabPath.getState().activeTabPath === path) {
+      useStore.activeTabPath.getState().setActiveTabPath(
+        remaining.length > 0 ? remaining[remaining.length - 1].path : '',
+      );
+    }
+    const currentUnsaved = useStore.unsavedFiles.getState().unsavedFiles;
+    useStore.unsavedFiles.getState().setUnsavedFiles(
+      currentUnsaved.filter((filePath) => filePath !== path),
+    );
+  };
+
+  const saveTab = async (tab: { path: string; name: string; content: string }) => {
+    let path = tab.path;
+    const currentTab = useStore.openTabs.getState().openTabs.find(
+      (openTab) => openTab.path === tab.path,
+    ) ?? tab;
+    if (path.startsWith('untitled://')) {
+      const wasActive = useStore.activeTabPath.getState().activeTabPath === tab.path;
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const chosen = await save({ defaultPath: tab.name });
+      if (!chosen) return;
+      path = chosen;
+      const tabs = useStore.openTabs.getState().openTabs;
+      useStore.openTabs.getState().setOpenTabs(
+        tabs.map((currentTab) => currentTab.path === tab.path
+          ? { ...currentTab, path, name: path.split(/[\\/]/).pop() || currentTab.name }
+          : currentTab),
+      );
+      if (wasActive) {
+        useStore.activeTabPath.getState().setActiveTabPath(path);
       }
-      const currentUnsaved = useStore.unsavedFiles.getState().unsavedFiles;
-      useStore.unsavedFiles
-        .getState()
-        .setUnsavedFiles(currentUnsaved.filter((p) => p !== path));
-    };
+    }
+    await saveFile(path, currentTab.content);
+    const unsaved = useStore.unsavedFiles.getState().unsavedFiles;
+    useStore.unsavedFiles.getState().setUnsavedFiles(
+      unsaved.filter((filePath) => filePath !== tab.path && filePath !== path),
+    );
+    return path;
+  };
+
+  const handleCloseTab = (path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const tab = useStore.openTabs.getState().openTabs.find((currentTab) => currentTab.path === path);
+    if (!tab) return;
+    if (useStore.unsavedFiles.getState().unsavedFiles.includes(path)) {
+      setPendingCloseTab(tab);
+      return;
+    }
+    closeTab(path);
+  };
   async function greet() {
     setGreetMsg(await invoke("greet", { name }));
   }
@@ -221,6 +265,26 @@ function App() {
           </div>
         </div>*/}
 
+
+        {pendingCloseTab && (
+          <UnsavedChangesModal
+            fileName={pendingCloseTab.name}
+            onCancel={() => setPendingCloseTab(null)}
+            onDiscard={() => {
+              closeTab(pendingCloseTab.path);
+              setPendingCloseTab(null);
+            }}
+            onSave={async () => {
+              try {
+                const savedPath = await saveTab(pendingCloseTab);
+                if (savedPath) closeTab(savedPath);
+                setPendingCloseTab(null);
+              } catch (error) {
+                console.error('Failed to save file before closing', error);
+              }
+            }}
+          />
+        )}
 
         {/*Status Bar*/}
         <div className="shrink-0">

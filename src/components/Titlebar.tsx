@@ -287,7 +287,7 @@ const Titlebar = () => {
           </button>
 
           {/* Fullscreen toggle */}
-          <button onClick={toggleFullscreen} className={btnClass}>
+          <button onClick={toggleMaximize} className={btnClass}>
             {minimized ? <Maximize size={20} /> : <Minimize size={20} />}
           </button>
           <button
