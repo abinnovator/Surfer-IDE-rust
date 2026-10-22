@@ -15,7 +15,16 @@ Surfer is built around the idea of adaptability and customization. Every feature
 Indexing creates a summary of every file in your project, giving AI agents and the editor deep context about what you're building. It powers several core features:
 
 - **Context-aware AI** — agents have full project context, leading to fewer errors and more relevant suggestions
-
+## Tech stack
+This was built in tauri with rust for the backend with vite and typescript for the frontend.
+## Shortcuts
+- cntrl + s for save
+- cntrl + n for a new blank file
+- cntrl + t for the terminal
+## How to obtain the ai token?
+- Go to https://surfer.aaditbhambri.com/token and create an account.
+- Go to  https://surfer.aaditbhambri.com/token and copy it
+- Then past it in the right sidebar:D
 ## What makes surfer IDE great?
 Its ability to adapt to your project. The indexing feature allows the LLM to know where each file is and what it does. This helps it help you debug better and generate code faster.
 
